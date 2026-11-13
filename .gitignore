@@ -1,0 +1,19 @@
+# ROS 2 workspace build, install, and log files
+build/
+install/
+log/
+
+# Python cache & virtual environments
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+
+# Editor and OS artifacts
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store

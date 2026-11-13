@@ -1,0 +1,9 @@
+# Initial joint configuration poised in ready pose
+shoulder_pan_joint: 0.0
+shoulder_lift_joint: -1.5707
+elbow_joint: 0.0
+wrist_1_joint: -1.5707
+wrist_2_joint: 0.0
+wrist_3_joint: 0.0
+rg2_finger_joint: 0.0
+rg2_finger_width: 0.055

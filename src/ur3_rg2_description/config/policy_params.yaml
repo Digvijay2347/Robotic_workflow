@@ -1,0 +1,87 @@
+# Copyright (c) 2022-2026, The Isaac Lab Project Developers (https://github.com/isaac-sim/IsaacLab/blob/main/CONTRIBUTORS.md).
+# All rights reserved.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+
+# Configuration parameters for UR3 + OnRobot RG2 DexCube Pick-and-Place Policy Node
+ur3_pick_place_policy_node:
+  ros__parameters:
+    # Model configuration (supports .pt PyTorch checkpoint or .onnx ONNX model)
+    model_path: ""
+    model_type: "auto"  # "auto", "torch", or "onnx"
+
+    # Execution & Safety parameters
+    enable_execution: false          # SAFETY: Set true to publish commands to robot motors, false for dry-run
+    action_scale: 0.15              # Global speed scaling factor [0.05 - 1.0] (start at 0.15 for safe hardware test)
+    safety_max_joint_delta: 0.05     # Max allowed single-step joint change [rad]
+    control_frequency_hz: 50.0       # Control loop frequency in Hz (matches 50 Hz Isaac Lab simulation)
+    watchdog_timeout_sec: 0.15       # Halt/idle if /joint_states is older than this threshold
+
+    # ROS 2 Topics and Services - Arm & State
+    command_topic: "/forward_position_controller/commands"
+    joint_states_topic: "/joint_states"
+
+    # RG2 Gripper Topics (Direct State & Control)
+    rg2_state_topic: "/rg2_state"              # Subscribes to gripper width in mm [0.0 to 110.0 mm]
+    rg2_state_msg_type: "Float64"              # Message type: "Float64" or "Float32"
+    rg2_max_stroke_mm: 110.0                   # Max gripper opening stroke in mm (maps 0..110 mm -> 0..180 policy obs)
+    rg2_control_topic: "/rg2_control"          # Publishes Int32 command: 0 = close / clamp, 1 = open
+
+    # Optional UR Tool Digital I/O Fallback (if RG2 is wired to tool_digital_output_0)
+    enable_tool_io_fallback: false             # Set true only if controlling gripper via UR tool digital pin
+    io_service_name: "/io_and_status_controller/set_io"
+    tool_digital_out_pin: 0                    # tool_digital_output_0 pin (1=open, 0=close)
+
+    # Perception-Free Pose & Workspace Topics
+    cube_pose_topic: "/ur3_pick_place/cube_pose"
+    target_pose_topic: "/ur3_pick_place/target_pose"
+    reset_service_name: "/ur3_pick_place/reset"
+    rviz_markers_topic: "/ur3_pick_place/markers"
+    box_marker_topic: "/ur3_pick_place/workspace_box_marker"
+    publish_workspace_marker: true
+    frame_id: "base_link"
+    tcp_offset_z: 0.1811                       # OnRobot RG2 fingertip centroid offset along wrist_3_link tool Z [m]
+
+    # Perception-Free Known Cube Spawn Pose (on table surface along +X axis)
+    known_cube_pose:
+      x: 0.300                       # [m] relative to UR3 base_link along +X axis
+      y: 0.000                       # [m]
+      z: 0.024                       # [m] tabletop elevation
+      qw: 1.0
+      qx: 0.0
+      qy: 0.0
+      qz: 0.0
+
+    # Target Destination Coordinate (on table surface along +Y axis)
+    default_target_pose:
+      x: 0.000                       # [m]
+      y: 0.300                       # [m] relative to UR3 base_link along +Y axis
+      z: 0.035                       # [m] tabletop placement destination
+
+    # Tabletop Workspace Safety Envelope (enforced before executing motions)
+    workspace_bounds:
+      radius_min: 0.15
+      radius_max: 0.48
+      x_min: -0.10
+      x_max: 0.45
+      y_min: -0.10
+      y_max: 0.45
+      z_min: 0.015
+      z_max: 0.350
+
+cube_and_target_publisher:
+  ros__parameters:
+    frame_id: "base_link"
+    cube_pose_topic: "/ur3_pick_place/cube_pose"
+    target_pose_topic: "/ur3_pick_place/target_pose"
+    markers_topic: "/ur3_pick_place/markers"
+    publish_frequency_hz: 10.0
+    initial_cube:
+      x: 0.300
+      y: 0.000
+      z: 0.024
+    initial_target:
+      x: 0.000
+      y: 0.300
+      z: 0.035
+

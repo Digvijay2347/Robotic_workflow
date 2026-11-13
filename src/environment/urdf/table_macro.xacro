@@ -1,0 +1,849 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- Include material definitions -->
+  <xacro:include filename="$(find environment)/urdf/materials.xacro"/>
+
+  <xacro:macro name="table" params="
+    prefix:=''
+    parent:='world'
+    *origin
+    table_length:=1.17
+    table_width:=0.72
+    table_height:=0.78
+    extrusion_size:=0.04
+    plate_length:=0.42
+    plate_width:=0.30
+    plate_thickness:=0.02
+    plate_x_from_left:=0.39
+    gantry_height:=1.17
+    gantry_overhang:=0.54
+    include_ur_controller:=true
+    include_teach_pendant:=true
+    include_overhead_gantry:=true
+    include_enclosure:=true
+    include_wall:=true
+    wall_gap:=0.10
+    wall_width:=2.40
+    wall_height:=2.50
+    wall_thickness:=0.10">
+
+    <!-- =================================================================== -->
+    <!-- Derived Properties                                                  -->
+    <!-- =================================================================== -->
+    <xacro:property name="half_l" value="${table_length / 2.0}"/>
+    <xacro:property name="half_w" value="${table_width / 2.0}"/>
+    <xacro:property name="leg_h" value="${table_height - 0.02}"/> <!-- 2cm caster offset -->
+    <xacro:property name="leg_z_center" value="${0.02 + leg_h / 2.0}"/>
+    <xacro:property name="leg_x_off" value="${half_l - extrusion_size / 2.0}"/>
+    <xacro:property name="leg_y_off" value="${half_w - extrusion_size / 2.0}"/>
+
+    <!-- Mounting plate location (centered in plate length, flush to rear) -->
+    <!-- From left edge by plate_x_from_left (0.39m), plate length 0.42m -->
+    <xacro:property name="plate_center_x" value="${-half_l + plate_x_from_left + (plate_length / 2.0)}"/>
+    <!-- Plate flush to back edge (+half_w): center is at half_w - plate_width/2 -->
+    <xacro:property name="plate_center_y" value="${half_w - (plate_width / 2.0)}"/>
+    <xacro:property name="plate_center_z" value="${table_height + (plate_thickness / 2.0)}"/>
+
+    <!-- Robot mount coordinate (15cm from rear edge, centered on plate length) -->
+    <xacro:property name="robot_mount_x" value="${plate_center_x}"/>
+    <xacro:property name="robot_mount_y" value="${half_w - 0.15}"/>
+    <xacro:property name="robot_mount_z" value="${table_height + plate_thickness}"/>
+
+    <!-- Overhead gantry dimensions -->
+    <xacro:property name="gantry_z_top" value="${table_height + gantry_height}"/>
+    <xacro:property name="gantry_post_z_center" value="${table_height + (gantry_height / 2.0)}"/>
+    <xacro:property name="gantry_arm_y_center" value="${half_w - (gantry_overhang / 2.0)}"/>
+
+    <!-- =================================================================== -->
+    <!-- Root Base Joint connecting to Parent Link                           -->
+    <!-- =================================================================== -->
+    <joint name="${prefix}table_root_joint" type="fixed">
+      <xacro:insert_block name="origin"/>
+      <parent link="${parent}"/>
+      <child link="${prefix}table_base_link"/>
+    </joint>
+
+    <link name="${prefix}table_base_link">
+      <inertial>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <mass value="0.001"/>
+        <inertia ixx="1e-5" ixy="0" ixz="0" iyy="1e-5" iyz="0" izz="1e-5"/>
+      </inertial>
+    </link>
+
+    <!-- =================================================================== -->
+    <!-- Table Aluminum Extrusion Frame Link                                 -->
+    <!-- =================================================================== -->
+    <joint name="${prefix}table_frame_joint" type="fixed">
+      <parent link="${prefix}table_base_link"/>
+      <child link="${prefix}table_frame_link"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </joint>
+
+    <link name="${prefix}table_frame_link">
+      <inertial>
+        <origin xyz="0 0 ${table_height / 2.0}" rpy="0 0 0"/>
+        <mass value="35.0"/>
+        <inertia ixx="3.2" ixy="0" ixz="0" iyy="5.8" iyz="0" izz="6.5"/>
+      </inertial>
+
+      <!-- 4 Vertical Legs (40x40mm) -->
+      <!-- Front-Left Leg -->
+      <visual>
+        <origin xyz="${-leg_x_off} ${-leg_y_off} ${leg_z_center}" rpy="0 0 0"/>
+        <geometry><box size="${extrusion_size} ${extrusion_size} ${leg_h}"/></geometry>
+        <material name="aluminum_silver"/>
+      </visual>
+      <collision>
+        <origin xyz="${-leg_x_off} ${-leg_y_off} ${leg_z_center}" rpy="0 0 0"/>
+        <geometry><box size="${extrusion_size} ${extrusion_size} ${leg_h}"/></geometry>
+      </collision>
+
+      <!-- Front-Right Leg -->
+      <visual>
+        <origin xyz="${leg_x_off} ${-leg_y_off} ${leg_z_center}" rpy="0 0 0"/>
+        <geometry><box size="${extrusion_size} ${extrusion_size} ${leg_h}"/></geometry>
+        <material name="aluminum_silver"/>
+      </visual>
+      <collision>
+        <origin xyz="${leg_x_off} ${-leg_y_off} ${leg_z_center}" rpy="0 0 0"/>
+        <geometry><box size="${extrusion_size} ${extrusion_size} ${leg_h}"/></geometry>
+      </collision>
+
+      <!-- Rear-Left Leg -->
+      <visual>
+        <origin xyz="${-leg_x_off} ${leg_y_off} ${leg_z_center}" rpy="0 0 0"/>
+        <geometry><box size="${extrusion_size} ${extrusion_size} ${leg_h}"/></geometry>
+        <material name="aluminum_silver"/>
+      </visual>
+      <collision>
+        <origin xyz="${-leg_x_off} ${leg_y_off} ${leg_z_center}" rpy="0 0 0"/>
+        <geometry><box size="${extrusion_size} ${extrusion_size} ${leg_h}"/></geometry>
+      </collision>
+
+      <!-- Rear-Right Leg -->
+      <visual>
+        <origin xyz="${leg_x_off} ${leg_y_off} ${leg_z_center}" rpy="0 0 0"/>
+        <geometry><box size="${extrusion_size} ${extrusion_size} ${leg_h}"/></geometry>
+        <material name="aluminum_silver"/>
+      </visual>
+      <collision>
+        <origin xyz="${leg_x_off} ${leg_y_off} ${leg_z_center}" rpy="0 0 0"/>
+        <geometry><box size="${extrusion_size} ${extrusion_size} ${leg_h}"/></geometry>
+      </collision>
+
+      <!-- Bottom Horizontal Beams (Z = 0.08m) -->
+      <!-- Front Bottom Beam -->
+      <visual>
+        <origin xyz="0 ${-leg_y_off} 0.08" rpy="0 0 0"/>
+        <geometry><box size="${table_length - 2*extrusion_size} ${extrusion_size} ${extrusion_size}"/></geometry>
+        <material name="aluminum_silver"/>
+      </visual>
+      <!-- Rear Bottom Beam -->
+      <visual>
+        <origin xyz="0 ${leg_y_off} 0.08" rpy="0 0 0"/>
+        <geometry><box size="${table_length - 2*extrusion_size} ${extrusion_size} ${extrusion_size}"/></geometry>
+        <material name="aluminum_silver"/>
+      </visual>
+      <!-- Left Bottom Beam -->
+      <visual>
+        <origin xyz="${-leg_x_off} 0 0.08" rpy="0 0 0"/>
+        <geometry><box size="${extrusion_size} ${table_width - 2*extrusion_size} ${extrusion_size}"/></geometry>
+        <material name="aluminum_silver"/>
+      </visual>
+      <!-- Right Bottom Beam -->
+      <visual>
+        <origin xyz="${leg_x_off} 0 0.08" rpy="0 0 0"/>
+        <geometry><box size="${extrusion_size} ${table_width - 2*extrusion_size} ${extrusion_size}"/></geometry>
+        <material name="aluminum_silver"/>
+      </visual>
+
+      <!-- Top Perimeter Frame Beams (Z = table_height - extrusion_size/2) -->
+      <!-- Front Top Beam -->
+      <visual>
+        <origin xyz="0 ${-leg_y_off} ${table_height - extrusion_size/2.0}" rpy="0 0 0"/>
+        <geometry><box size="${table_length} ${extrusion_size} ${extrusion_size}"/></geometry>
+        <material name="aluminum_silver"/>
+      </visual>
+      <collision>
+        <origin xyz="0 ${-leg_y_off} ${table_height - extrusion_size/2.0}" rpy="0 0 0"/>
+        <geometry><box size="${table_length} ${extrusion_size} ${extrusion_size}"/></geometry>
+      </collision>
+
+      <!-- Rear Top Beam -->
+      <visual>
+        <origin xyz="0 ${leg_y_off} ${table_height - extrusion_size/2.0}" rpy="0 0 0"/>
+        <geometry><box size="${table_length} ${extrusion_size} ${extrusion_size}"/></geometry>
+        <material name="aluminum_silver"/>
+      </visual>
+      <collision>
+        <origin xyz="0 ${leg_y_off} ${table_height - extrusion_size/2.0}" rpy="0 0 0"/>
+        <geometry><box size="${table_length} ${extrusion_size} ${extrusion_size}"/></geometry>
+      </collision>
+
+      <!-- Left Top Beam -->
+      <visual>
+        <origin xyz="${-leg_x_off} 0 ${table_height - extrusion_size/2.0}" rpy="0 0 0"/>
+        <geometry><box size="${extrusion_size} ${table_width - 2*extrusion_size} ${extrusion_size}"/></geometry>
+        <material name="aluminum_silver"/>
+      </visual>
+      <collision>
+        <origin xyz="${-leg_x_off} 0 ${table_height - extrusion_size/2.0}" rpy="0 0 0"/>
+        <geometry><box size="${extrusion_size} ${table_width - 2*extrusion_size} ${extrusion_size}"/></geometry>
+      </collision>
+
+      <!-- Right Top Beam -->
+      <visual>
+        <origin xyz="${leg_x_off} 0 ${table_height - extrusion_size/2.0}" rpy="0 0 0"/>
+        <geometry><box size="${extrusion_size} ${table_width - 2*extrusion_size} ${extrusion_size}"/></geometry>
+        <material name="aluminum_silver"/>
+      </visual>
+      <collision>
+        <origin xyz="${leg_x_off} 0 ${table_height - extrusion_size/2.0}" rpy="0 0 0"/>
+        <geometry><box size="${extrusion_size} ${table_width - 2*extrusion_size} ${extrusion_size}"/></geometry>
+      </collision>
+
+      <!-- Intermediate Sub-Frame Crossbars under robot mount -->
+      <visual>
+        <origin xyz="${plate_center_x} 0 ${table_height - extrusion_size/2.0}" rpy="0 0 0"/>
+        <geometry><box size="${extrusion_size} ${table_width - 2*extrusion_size} ${extrusion_size}"/></geometry>
+        <material name="aluminum_silver"/>
+      </visual>
+
+      <!-- 4 Corner Leveling Casters / Wheels -->
+      <!-- Front-Left Caster -->
+      <visual>
+        <origin xyz="${-leg_x_off} ${-leg_y_off} 0.01" rpy="0 0 0"/>
+        <geometry><cylinder radius="0.03" length="0.02"/></geometry>
+        <material name="caster_white"/>
+      </visual>
+      <!-- Front-Right Caster -->
+      <visual>
+        <origin xyz="${leg_x_off} ${-leg_y_off} 0.01" rpy="0 0 0"/>
+        <geometry><cylinder radius="0.03" length="0.02"/></geometry>
+        <material name="caster_white"/>
+      </visual>
+      <!-- Rear-Left Caster -->
+      <visual>
+        <origin xyz="${-leg_x_off} ${leg_y_off} 0.01" rpy="0 0 0"/>
+        <geometry><cylinder radius="0.03" length="0.02"/></geometry>
+        <material name="caster_white"/>
+      </visual>
+      <!-- Rear-Right Caster -->
+      <visual>
+        <origin xyz="${leg_x_off} ${leg_y_off} 0.01" rpy="0 0 0"/>
+        <geometry><cylinder radius="0.03" length="0.02"/></geometry>
+        <material name="caster_white"/>
+      </visual>
+    </link>
+
+    <!-- =================================================================== -->
+    <!-- Tabletop Surface Link (Black ESD rubber matting work area)         -->
+    <!-- =================================================================== -->
+    <joint name="${prefix}table_top_joint" type="fixed">
+      <parent link="${prefix}table_base_link"/>
+      <child link="${prefix}table_top_link"/>
+      <origin xyz="0 0 ${table_height}" rpy="0 0 0"/>
+    </joint>
+
+    <link name="${prefix}table_top_link">
+      <inertial>
+        <origin xyz="0 0 -0.005" rpy="0 0 0"/>
+        <mass value="15.0"/>
+        <inertia ixx="0.65" ixy="0" ixz="0" iyy="1.71" iyz="0" izz="2.35"/>
+      </inertial>
+
+      <!-- Main tabletop substrate panel -->
+      <visual>
+        <origin xyz="0 0 -0.01" rpy="0 0 0"/>
+        <geometry><box size="${table_length - 0.004} ${table_width - 0.004} 0.015"/></geometry>
+        <material name="aluminum_dark"/>
+      </visual>
+
+      <!-- Work surface ESD Protective Mat (split around mounting plate) -->
+      <!-- Front main workspace mat (0.42m depth) -->
+      <visual>
+        <origin xyz="0 ${-half_w + 0.21} 0.001" rpy="0 0 0"/>
+        <geometry><box size="${table_length - 0.01} 0.42 0.002"/></geometry>
+        <material name="esd_mat_black"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 -0.01" rpy="0 0 0"/>
+        <geometry><box size="${table_length} ${table_width} 0.02"/></geometry>
+      </collision>
+
+      <!-- Left rear workspace mat area (39cm from left) -->
+      <visual>
+        <origin xyz="${-half_l + (plate_x_from_left/2.0)} ${half_w - (plate_width/2.0)} 0.001" rpy="0 0 0"/>
+        <geometry><box size="${plate_x_from_left} ${plate_width} 0.002"/></geometry>
+        <material name="esd_mat_black"/>
+      </visual>
+
+      <!-- Right rear workspace mat / accessory area -->
+      <visual>
+        <origin xyz="${half_l - (0.37/2.0)} ${half_w - (plate_width/2.0)} 0.001" rpy="0 0 0"/>
+        <geometry><box size="0.37 ${plate_width} 0.002"/></geometry>
+        <material name="esd_mat_black"/>
+      </visual>
+
+      <!-- Accessory Laptop / Teach Tray on right front (37cm x 28cm) -->
+      <visual>
+        <origin xyz="${half_l - 0.22} ${-half_w + 0.16} 0.006" rpy="0 0 0"/>
+        <geometry><box size="0.37 0.28 0.008"/></geometry>
+        <material name="aluminum_dark"/>
+      </visual>
+    </link>
+
+    <!-- Tabletop Center Surface Reference Frame -->
+    <joint name="${prefix}table_surface_joint" type="fixed">
+      <parent link="${prefix}table_top_link"/>
+      <child link="${prefix}table_surface_frame"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </joint>
+    <link name="${prefix}table_surface_frame"/>
+
+    <!-- =================================================================== -->
+    <!-- Solid Aluminum Robot Mounting Plate (42cm x 30cm x 2cm)             -->
+    <!-- Measured: 39cm from left, flush to rear edge, 2cm thick             -->
+    <!-- =================================================================== -->
+    <joint name="${prefix}table_robot_mount_plate_joint" type="fixed">
+      <parent link="${prefix}table_base_link"/>
+      <child link="${prefix}table_robot_mount_plate_link"/>
+      <origin xyz="${plate_center_x} ${plate_center_y} ${plate_center_z}" rpy="0 0 0"/>
+    </joint>
+
+    <link name="${prefix}table_robot_mount_plate_link">
+      <inertial>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <mass value="6.8"/>
+        <inertia ixx="0.051" ixy="0" ixz="0" iyy="0.100" iyz="0" izz="0.151"/>
+      </inertial>
+
+      <!-- Solid machined 20mm aluminum base plate -->
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry><box size="${plate_length} ${plate_width} ${plate_thickness}"/></geometry>
+        <material name="machined_plate_silver"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry><box size="${plate_length} ${plate_width} ${plate_thickness}"/></geometry>
+      </collision>
+    </link>
+
+    <!-- =================================================================== -->
+    <!-- Robot Mount Attachment Frame                                        -->
+    <!-- Sits directly on top of the 2cm plate at the UR3 base center        -->
+    <!-- =================================================================== -->
+    <joint name="${prefix}table_robot_mount_frame_joint" type="fixed">
+      <parent link="${prefix}table_base_link"/>
+      <child link="${prefix}table_robot_mount_frame"/>
+      <origin xyz="${robot_mount_x} ${robot_mount_y} ${robot_mount_z}" rpy="0 0 ${-pi/2}"/>
+    </joint>
+    <link name="${prefix}table_robot_mount_frame"/>
+
+    <!-- Alias convenience frame for UR robot base -->
+    <joint name="${prefix}ur3_mount_frame_joint" type="fixed">
+      <parent link="${prefix}table_robot_mount_frame"/>
+      <child link="${prefix}ur3_mount_link"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </joint>
+    <link name="${prefix}ur3_mount_link"/>
+
+    <!-- =================================================================== -->
+    <!-- Transparent Acrylic Enclosure Panels & Front Cabinet Doors          -->
+    <!-- =================================================================== -->
+    <xacro:if value="${include_enclosure}">
+      <joint name="${prefix}table_enclosure_joint" type="fixed">
+        <parent link="${prefix}table_base_link"/>
+        <child link="${prefix}table_enclosure_link"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+      </joint>
+
+      <link name="${prefix}table_enclosure_link">
+        <inertial>
+          <origin xyz="0 0 ${table_height / 2.0}" rpy="0 0 0"/>
+          <mass value="12.0"/>
+          <inertia ixx="1.2" ixy="0" ixz="0" iyy="2.0" iyz="0" izz="2.5"/>
+        </inertial>
+
+        <!-- Left Transparent Side Acrylic Panel -->
+        <visual>
+          <origin xyz="${-leg_x_off} 0 ${leg_z_center}" rpy="0 0 0"/>
+          <geometry><box size="0.005 ${table_width - 2*extrusion_size} ${leg_h - 2*extrusion_size}"/></geometry>
+          <material name="acrylic_clear"/>
+        </visual>
+        <collision>
+          <origin xyz="${-leg_x_off} 0 ${leg_z_center}" rpy="0 0 0"/>
+          <geometry><box size="0.01 ${table_width - 2*extrusion_size} ${leg_h - 2*extrusion_size}"/></geometry>
+        </collision>
+
+        <!-- Right Transparent Side Acrylic Panel -->
+        <visual>
+          <origin xyz="${leg_x_off} 0 ${leg_z_center}" rpy="0 0 0"/>
+          <geometry><box size="0.005 ${table_width - 2*extrusion_size} ${leg_h - 2*extrusion_size}"/></geometry>
+          <material name="acrylic_clear"/>
+        </visual>
+        <collision>
+          <origin xyz="${leg_x_off} 0 ${leg_z_center}" rpy="0 0 0"/>
+          <geometry><box size="0.01 ${table_width - 2*extrusion_size} ${leg_h - 2*extrusion_size}"/></geometry>
+        </collision>
+
+        <!-- Rear Transparent Acrylic Panel -->
+        <visual>
+          <origin xyz="0 ${leg_y_off} ${leg_z_center}" rpy="0 0 0"/>
+          <geometry><box size="${table_length - 2*extrusion_size} 0.005 ${leg_h - 2*extrusion_size}"/></geometry>
+          <material name="acrylic_clear"/>
+        </visual>
+        <collision>
+          <origin xyz="0 ${leg_y_off} ${leg_z_center}" rpy="0 0 0"/>
+          <geometry><box size="${table_length - 2*extrusion_size} 0.01 ${leg_h - 2*extrusion_size}"/></geometry>
+        </collision>
+
+        <!-- Front Central Divider Post -->
+        <visual>
+          <origin xyz="0 ${-leg_y_off} ${leg_z_center}" rpy="0 0 0"/>
+          <geometry><box size="${extrusion_size} ${extrusion_size} ${leg_h - 2*extrusion_size}"/></geometry>
+          <material name="aluminum_silver"/>
+        </visual>
+
+        <!-- Front Left Hinged Door Panel -->
+        <visual>
+          <origin xyz="${-(table_length - 2*extrusion_size)/4.0} ${-leg_y_off} ${leg_z_center}" rpy="0 0 0"/>
+          <geometry><box size="${(table_length - 2*extrusion_size)/2.0 - 0.01} 0.006 ${leg_h - 2*extrusion_size - 0.01}"/></geometry>
+          <material name="acrylic_clear"/>
+        </visual>
+        <collision>
+          <origin xyz="${-(table_length - 2*extrusion_size)/4.0} ${-leg_y_off} ${leg_z_center}" rpy="0 0 0"/>
+          <geometry><box size="${(table_length - 2*extrusion_size)/2.0 - 0.01} 0.015 ${leg_h - 2*extrusion_size}"/></geometry>
+        </collision>
+
+        <!-- Front Right Hinged Door Panel -->
+        <visual>
+          <origin xyz="${(table_length - 2*extrusion_size)/4.0} ${-leg_y_off} ${leg_z_center}" rpy="0 0 0"/>
+          <geometry><box size="${(table_length - 2*extrusion_size)/2.0 - 0.01} 0.006 ${leg_h - 2*extrusion_size - 0.01}"/></geometry>
+          <material name="acrylic_clear"/>
+        </visual>
+        <collision>
+          <origin xyz="${(table_length - 2*extrusion_size)/4.0} ${-leg_y_off} ${leg_z_center}" rpy="0 0 0"/>
+          <geometry><box size="${(table_length - 2*extrusion_size)/2.0 - 0.01} 0.015 ${leg_h - 2*extrusion_size}"/></geometry>
+        </collision>
+
+        <!-- Left Door Black Handle -->
+        <visual>
+          <origin xyz="-0.03 ${-leg_y_off - 0.025} ${leg_z_center}" rpy="0 0 0"/>
+          <geometry><box size="0.02 0.03 0.14"/></geometry>
+          <material name="hardware_black"/>
+        </visual>
+
+        <!-- Right Door Black Handle -->
+        <visual>
+          <origin xyz="0.03 ${-leg_y_off - 0.025} ${leg_z_center}" rpy="0 0 0"/>
+          <geometry><box size="0.02 0.03 0.14"/></geometry>
+          <material name="hardware_black"/>
+        </visual>
+      </link>
+    </xacro:if>
+
+    <!-- =================================================================== -->
+    <!-- Lower Storage Shelf Link                                            -->
+    <!-- =================================================================== -->
+    <joint name="${prefix}table_lower_shelf_joint" type="fixed">
+      <parent link="${prefix}table_base_link"/>
+      <child link="${prefix}table_lower_shelf_link"/>
+      <origin xyz="0 0 0.10" rpy="0 0 0"/>
+    </joint>
+
+    <link name="${prefix}table_lower_shelf_link">
+      <inertial>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <mass value="8.0"/>
+        <inertia ixx="0.32" ixy="0" ixz="0" iyy="0.84" iyz="0" izz="1.15"/>
+      </inertial>
+
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry><box size="${table_length - 2*extrusion_size} ${table_width - 2*extrusion_size} 0.01"/></geometry>
+        <material name="machined_plate_silver"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry><box size="${table_length - 2*extrusion_size} ${table_width - 2*extrusion_size} 0.01"/></geometry>
+      </collision>
+    </link>
+
+    <!-- =================================================================== -->
+    <!-- UR Controller Box (CB-series / e-series controller inside cabinet)  -->
+    <!-- =================================================================== -->
+    <xacro:if value="${include_ur_controller}">
+      <joint name="${prefix}ur_control_box_joint" type="fixed">
+        <parent link="${prefix}table_lower_shelf_link"/>
+        <child link="${prefix}ur_control_box_link"/>
+        <!-- Placed in the left-center area on the shelf -->
+        <origin xyz="-0.12 0 0.22" rpy="0 0 0"/>
+      </joint>
+
+      <link name="${prefix}ur_control_box_link">
+        <inertial>
+          <origin xyz="0 0 0" rpy="0 0 0"/>
+          <mass value="15.0"/>
+          <inertia ixx="0.22" ixy="0" ixz="0" iyy="0.41" iyz="0" izz="0.38"/>
+        </inertial>
+
+        <!-- Main Controller Body (0.47m deep x 0.27m wide x 0.42m high) -->
+        <visual>
+          <origin xyz="0 0 0" rpy="0 0 0"/>
+          <geometry><box size="0.27 0.47 0.42"/></geometry>
+          <material name="ur_controller_grey"/>
+        </visual>
+        <collision>
+          <origin xyz="0 0 0" rpy="0 0 0"/>
+          <geometry><box size="0.27 0.47 0.42"/></geometry>
+        </collision>
+
+        <!-- Controller Top Handle -->
+        <visual>
+          <origin xyz="0 0 0.225" rpy="0 0 0"/>
+          <geometry><box size="0.04 0.16 0.03"/></geometry>
+          <material name="hardware_black"/>
+        </visual>
+
+        <!-- Controller Front Fan Grill -->
+        <visual>
+          <origin xyz="0.136 -0.12 -0.04" rpy="0 0 0"/>
+          <geometry><box size="0.005 0.14 0.14"/></geometry>
+          <material name="ur_controller_dark"/>
+        </visual>
+      </link>
+    </xacro:if>
+
+    <!-- =================================================================== -->
+    <!-- Overhead Gantry & Camera / Vision System                            -->
+    <!-- Measured: 1.17m vertical uprights, 54cm overhang, LED light fixture -->
+    <!-- =================================================================== -->
+    <xacro:if value="${include_overhead_gantry}">
+      <joint name="${prefix}overhead_gantry_joint" type="fixed">
+        <parent link="${prefix}table_base_link"/>
+        <child link="${prefix}overhead_gantry_link"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+      </joint>
+
+      <link name="${prefix}overhead_gantry_link">
+        <inertial>
+          <origin xyz="0 ${half_w - 0.20} ${gantry_post_z_center}" rpy="0 0 0"/>
+          <mass value="16.0"/>
+          <inertia ixx="2.5" ixy="0" ixz="0" iyy="3.1" iyz="0" izz="2.8"/>
+        </inertial>
+
+        <!-- Left Rear Vertical Post (1.17m above tabletop) -->
+        <visual>
+          <origin xyz="${-leg_x_off} ${leg_y_off} ${gantry_post_z_center}" rpy="0 0 0"/>
+          <geometry><box size="${extrusion_size} ${extrusion_size} ${gantry_height}"/></geometry>
+          <material name="aluminum_silver"/>
+        </visual>
+        <collision>
+          <origin xyz="${-leg_x_off} ${leg_y_off} ${gantry_post_z_center}" rpy="0 0 0"/>
+          <geometry><box size="${extrusion_size} ${extrusion_size} ${gantry_height}"/></geometry>
+        </collision>
+
+        <!-- Right Rear Vertical Post (1.17m above tabletop) -->
+        <visual>
+          <origin xyz="${leg_x_off} ${leg_y_off} ${gantry_post_z_center}" rpy="0 0 0"/>
+          <geometry><box size="${extrusion_size} ${extrusion_size} ${gantry_height}"/></geometry>
+          <material name="aluminum_silver"/>
+        </visual>
+        <collision>
+          <origin xyz="${leg_x_off} ${leg_y_off} ${gantry_post_z_center}" rpy="0 0 0"/>
+          <geometry><box size="${extrusion_size} ${extrusion_size} ${gantry_height}"/></geometry>
+        </collision>
+
+        <!-- Rear Top Horizontal Span Beam (connecting top of uprights) -->
+        <visual>
+          <origin xyz="0 ${leg_y_off} ${gantry_z_top - extrusion_size/2.0}" rpy="0 0 0"/>
+          <geometry><box size="${table_length} ${extrusion_size} ${extrusion_size}"/></geometry>
+          <material name="aluminum_silver"/>
+        </visual>
+        <collision>
+          <origin xyz="0 ${leg_y_off} ${gantry_z_top - extrusion_size/2.0}" rpy="0 0 0"/>
+          <geometry><box size="${table_length} ${extrusion_size} ${extrusion_size}"/></geometry>
+        </collision>
+
+        <!-- Left Overhang Cantilever Beam (54cm forward) -->
+        <visual>
+          <origin xyz="${-leg_x_off} ${gantry_arm_y_center} ${gantry_z_top - extrusion_size/2.0}" rpy="0 0 0"/>
+          <geometry><box size="${extrusion_size} ${gantry_overhang} ${extrusion_size}"/></geometry>
+          <material name="aluminum_silver"/>
+        </visual>
+        <collision>
+          <origin xyz="${-leg_x_off} ${gantry_arm_y_center} ${gantry_z_top - extrusion_size/2.0}" rpy="0 0 0"/>
+          <geometry><box size="${extrusion_size} ${gantry_overhang} ${extrusion_size}"/></geometry>
+        </collision>
+
+        <!-- Right Overhang Cantilever Beam (54cm forward) -->
+        <visual>
+          <origin xyz="${leg_x_off} ${gantry_arm_y_center} ${gantry_z_top - extrusion_size/2.0}" rpy="0 0 0"/>
+          <geometry><box size="${extrusion_size} ${gantry_overhang} ${extrusion_size}"/></geometry>
+          <material name="aluminum_silver"/>
+        </visual>
+        <collision>
+          <origin xyz="${leg_x_off} ${gantry_arm_y_center} ${gantry_z_top - extrusion_size/2.0}" rpy="0 0 0"/>
+          <geometry><box size="${extrusion_size} ${gantry_overhang} ${extrusion_size}"/></geometry>
+        </collision>
+
+        <!-- Front Top Crossbar (connecting the cantilever tips) -->
+        <visual>
+          <origin xyz="0 ${half_w - gantry_overhang + extrusion_size/2.0} ${gantry_z_top - extrusion_size/2.0}" rpy="0 0 0"/>
+          <geometry><box size="${table_length} ${extrusion_size} ${extrusion_size}"/></geometry>
+          <material name="aluminum_silver"/>
+        </visual>
+        <collision>
+          <origin xyz="0 ${half_w - gantry_overhang + extrusion_size/2.0} ${gantry_z_top - extrusion_size/2.0}" rpy="0 0 0"/>
+          <geometry><box size="${table_length} ${extrusion_size} ${extrusion_size}"/></geometry>
+        </collision>
+
+        <!-- Left Corner Reinforcement Gusset Plate -->
+        <visual>
+          <origin xyz="${-leg_x_off} ${leg_y_off - 0.08} ${gantry_z_top - 0.08}" rpy="0.785398 0 0"/>
+          <geometry><box size="0.01 0.14 0.01"/></geometry>
+          <material name="aluminum_dark"/>
+        </visual>
+
+        <!-- Right Corner Reinforcement Gusset Plate -->
+        <visual>
+          <origin xyz="${leg_x_off} ${leg_y_off - 0.08} ${gantry_z_top - 0.08}" rpy="0.785398 0 0"/>
+          <geometry><box size="0.01 0.14 0.01"/></geometry>
+          <material name="aluminum_dark"/>
+        </visual>
+      </link>
+
+      <!-- Overhead LED Work Lighting Fixture -->
+      <joint name="${prefix}overhead_lighting_joint" type="fixed">
+        <parent link="${prefix}overhead_gantry_link"/>
+        <child link="${prefix}overhead_lighting_link"/>
+        <origin xyz="0 ${gantry_arm_y_center} ${gantry_z_top - 0.06}" rpy="0 0 0"/>
+      </joint>
+
+      <link name="${prefix}overhead_lighting_link">
+        <inertial>
+          <origin xyz="0 0 0" rpy="0 0 0"/>
+          <mass value="2.5"/>
+          <inertia ixx="0.04" ixy="0" ixz="0" iyy="0.25" iyz="0" izz="0.28"/>
+        </inertial>
+
+        <!-- Lighting Housing -->
+        <visual>
+          <origin xyz="0 0 0.015" rpy="0 0 0"/>
+          <geometry><box size="1.05 0.18 0.03"/></geometry>
+          <material name="aluminum_silver"/>
+        </visual>
+        <collision>
+          <origin xyz="0 0 0.015" rpy="0 0 0"/>
+          <geometry><box size="1.05 0.18 0.03"/></geometry>
+        </collision>
+
+        <!-- Dual LED Tubes (Emissive White) -->
+        <visual>
+          <origin xyz="0 -0.04 -0.005" rpy="0 1.57079 0"/>
+          <geometry><cylinder radius="0.012" length="1.0"/></geometry>
+          <material name="led_white"/>
+        </visual>
+        <visual>
+          <origin xyz="0 0.04 -0.005" rpy="0 1.57079 0"/>
+          <geometry><cylinder radius="0.012" length="1.0"/></geometry>
+          <material name="led_white"/>
+        </visual>
+      </link>
+
+      <!-- Overhead Articulated Camera Mount Frame -->
+      <joint name="${prefix}camera_overhead_mount_joint" type="fixed">
+        <parent link="${prefix}overhead_gantry_link"/>
+        <child link="${prefix}camera_overhead_mount_link"/>
+        <origin xyz="0 ${half_w - gantry_overhang + 0.10} ${gantry_z_top - 0.05}" rpy="0 0 0"/>
+      </joint>
+
+      <link name="${prefix}camera_overhead_mount_link">
+        <inertial>
+          <origin xyz="0 0 -0.08" rpy="0 0 0"/>
+          <mass value="0.8"/>
+          <inertia ixx="0.005" ixy="0" ixz="0" iyy="0.005" iyz="0" izz="0.002"/>
+        </inertial>
+
+        <!-- Articulated Magic Arm Bracket -->
+        <visual>
+          <origin xyz="0 0 -0.07" rpy="0 0 0"/>
+          <geometry><cylinder radius="0.01" length="0.14"/></geometry>
+          <material name="hardware_black"/>
+        </visual>
+        <!-- Camera Body Housing -->
+        <visual>
+          <origin xyz="0 0 -0.15" rpy="0 0 0"/>
+          <geometry><box size="0.09 0.05 0.03"/></geometry>
+          <material name="hardware_black"/>
+        </visual>
+        <!-- Camera Lens pointing downward -->
+        <visual>
+          <origin xyz="0 0 -0.17" rpy="0 0 0"/>
+          <geometry><cylinder radius="0.012" length="0.02"/></geometry>
+          <material name="aluminum_dark"/>
+        </visual>
+        <collision>
+          <origin xyz="0 0 -0.12" rpy="0 0 0"/>
+          <geometry><box size="0.12 0.10 0.16"/></geometry>
+        </collision>
+      </link>
+
+      <!-- Overhead Camera Optical Frame (pointing down towards table surface) -->
+      <!-- In ROS optical convention: Z forward (down), X right, Y down (forward) -->
+      <joint name="${prefix}camera_overhead_optical_joint" type="fixed">
+        <parent link="${prefix}camera_overhead_mount_link"/>
+        <child link="${prefix}camera_overhead_optical_frame"/>
+        <origin xyz="0 0 -0.18" rpy="3.14159265 0 -1.5707963"/>
+      </joint>
+      <link name="${prefix}camera_overhead_optical_frame"/>
+    </xacro:if>
+
+    <!-- =================================================================== -->
+    <!-- UR Teach Pendant & Mounting Bracket                                 -->
+    <!-- Mounted on the left table extrusion with screen parallel to side    -->
+    <!-- acrylic sheet (Y-Z plane, facing outwards in -X direction)         -->
+    <!-- =================================================================== -->
+    <xacro:if value="${include_teach_pendant}">
+      <joint name="${prefix}teach_pendant_mount_joint" type="fixed">
+        <parent link="${prefix}table_base_link"/>
+        <child link="${prefix}teach_pendant_mount_link"/>
+        <!-- Mounted on the left side (-half_l), towards the front (-0.18m), at upper frame level -->
+        <origin xyz="${-half_l} -0.18 ${table_height - 0.12}" rpy="0 0 0"/>
+      </joint>
+
+      <link name="${prefix}teach_pendant_mount_link">
+        <inertial>
+          <origin xyz="-0.04 0 0" rpy="0 0 0"/>
+          <mass value="1.8"/>
+          <inertia ixx="0.01" ixy="0" ixz="0" iyy="0.02" iyz="0" izz="0.02"/>
+        </inertial>
+
+        <!-- Mounting Arm from Extrusion -->
+        <visual>
+          <origin xyz="-0.025 0 0" rpy="0 0 0"/>
+          <geometry><box size="0.05 0.04 0.04"/></geometry>
+          <material name="aluminum_dark"/>
+        </visual>
+
+        <!-- Teach Pendant Housing (Screen strictly parallel to side acrylic sheet) -->
+        <visual>
+          <origin xyz="-0.05 0 0" rpy="0 0 0"/>
+          <geometry><box size="0.045 0.32 0.24"/></geometry>
+          <material name="teach_pendant_blue"/>
+        </visual>
+        <collision>
+          <origin xyz="-0.05 0 0" rpy="0 0 0"/>
+          <geometry><box size="0.05 0.34 0.26"/></geometry>
+        </collision>
+
+        <!-- Touchscreen Surface (Facing outwards along -X, parallel to side acrylic panel) -->
+        <visual>
+          <origin xyz="-0.073 0.02 0" rpy="0 0 0"/>
+          <geometry><box size="0.002 0.23 0.18"/></geometry>
+          <material name="teach_pendant_screen"/>
+        </visual>
+
+        <!-- Emergency Stop Button (front side of pendant, protruding outwards in -X) -->
+        <visual>
+          <origin xyz="-0.075 -0.115 -0.02" rpy="0 1.5707963 0"/>
+          <geometry><cylinder radius="0.018" length="0.02"/></geometry>
+          <material name="estop_red"/>
+        </visual>
+
+        <!-- Status Indicator LED (above E-Stop) -->
+        <visual>
+          <origin xyz="-0.073 -0.115 0.03" rpy="0 1.5707963 0"/>
+          <geometry><cylinder radius="0.008" length="0.005"/></geometry>
+          <material name="status_green"/>
+        </visual>
+      </link>
+    </xacro:if>
+
+    <!-- =================================================================== -->
+    <!-- Lab Wall Behind Table (10cm gap from table rear edge)               -->
+    <!-- Critical collision barrier and visual background from lab photos     -->
+    <!-- =================================================================== -->
+    <xacro:if value="${include_wall}">
+      <xacro:property name="wall_y_center" value="${half_w + wall_gap + (wall_thickness / 2.0)}"/>
+
+      <joint name="${prefix}table_wall_joint" type="fixed">
+        <parent link="${prefix}table_base_link"/>
+        <child link="${prefix}table_wall_link"/>
+        <origin xyz="0 ${wall_y_center} ${wall_height / 2.0}" rpy="0 0 0"/>
+      </joint>
+
+      <link name="${prefix}table_wall_link">
+        <inertial>
+          <origin xyz="0 0 0" rpy="0 0 0"/>
+          <mass value="50.0"/>
+          <inertia ixx="30.0" ixy="0" ixz="0" iyy="40.0" iyz="0" izz="50.0"/>
+        </inertial>
+
+        <!-- Base Wall Surface (Cream / Off-white lab wall) -->
+        <visual>
+          <origin xyz="0 0 0" rpy="0 0 0"/>
+          <geometry><box size="${wall_width} ${wall_thickness} ${wall_height}"/></geometry>
+          <material name="wall_cream"/>
+        </visual>
+        <!-- Full Wall Collision Box (Protects MoveIt trajectories from wall collisions) -->
+        <collision>
+          <origin xyz="0 0 0" rpy="0 0 0"/>
+          <geometry><box size="${wall_width} ${wall_thickness} ${wall_height}"/></geometry>
+        </collision>
+
+        <!-- Upper Blue Accent Partition Panels (seen in photos) -->
+        <!-- Left Blue Panel -->
+        <visual>
+          <origin xyz="-0.55 ${-wall_thickness/2.0 - 0.002} 0.35" rpy="0 0 0"/>
+          <geometry><box size="0.95 0.004 0.90"/></geometry>
+          <material name="wall_blue"/>
+        </visual>
+        <!-- Right Blue Panel -->
+        <visual>
+          <origin xyz="0.55 ${-wall_thickness/2.0 - 0.002} 0.35" rpy="0 0 0"/>
+          <geometry><box size="0.95 0.004 0.90"/></geometry>
+          <material name="wall_blue"/>
+        </visual>
+
+        <!-- Mahogany Wood Divider Frame / Moldings (seen in photos) -->
+        <!-- Horizontal Mid-Divider Beam -->
+        <visual>
+          <origin xyz="0 ${-wall_thickness/2.0 - 0.004} -0.12" rpy="0 0 0"/>
+          <geometry><box size="${wall_width} 0.008 0.05"/></geometry>
+          <material name="wood_trim_brown"/>
+        </visual>
+        <!-- Top Divider Beam -->
+        <visual>
+          <origin xyz="0 ${-wall_thickness/2.0 - 0.004} 0.82" rpy="0 0 0"/>
+          <geometry><box size="${wall_width} 0.008 0.05"/></geometry>
+          <material name="wood_trim_brown"/>
+        </visual>
+        <!-- Center Vertical Wood Divider Post -->
+        <visual>
+          <origin xyz="0 ${-wall_thickness/2.0 - 0.004} 0.35" rpy="0 0 0"/>
+          <geometry><box size="0.05 0.008 0.94"/></geometry>
+          <material name="wood_trim_brown"/>
+        </visual>
+
+        <!-- Industrial Electrical Enclosure & Outlets on Wall (seen behind robot) -->
+        <visual>
+          <origin xyz="-0.22 ${-wall_thickness/2.0 - 0.02} 0.08" rpy="0 0 0"/>
+          <geometry><box size="0.22 0.035 0.28"/></geometry>
+          <material name="electrical_grey"/>
+        </visual>
+        <!-- Red 3-phase industrial power socket -->
+        <visual>
+          <origin xyz="-0.22 ${-wall_thickness/2.0 - 0.04} 0.02" rpy="1.5707963 0 0"/>
+          <geometry><cylinder radius="0.035" length="0.025"/></geometry>
+          <material name="socket_red"/>
+        </visual>
+      </link>
+    </xacro:if>
+
+  </xacro:macro>
+</robot>

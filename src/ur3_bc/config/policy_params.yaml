@@ -1,0 +1,42 @@
+# UR3 Behavioral Cloning (BC) Policy Configuration
+/**:
+  ros__parameters:
+    # Control loop frequency
+    control_frequency_hz: 125.0
+    command_topic: "/forward_position_controller/commands"
+    joint_states_topic: "/joint_states"
+    target_pose_topic: "/target_pose"
+    gripper_command_topic: "/rg2_command_int"
+    gripper_state_topic: "/rg2_state"
+
+    # Reference frames
+    base_frame: "base_link"
+    tcp_frame: "rg2_gripper_tcp"
+    mount_frame: "table_robot_mount_frame"
+
+    # Safety Geofence in table_robot_mount_frame (m)
+    geofence:
+      x_min: 0.070   # 40 cm forward reach span (7cm to 47cm forward)
+      x_max: 0.470
+      y_min: -0.450  # 90 cm lateral width span (-45cm to +45cm across table)
+      y_max: 0.450
+      z_min: 0.020   # 26 cm vertical height span (2cm to 28cm above plate)
+      z_max: 0.280
+      r_min: 0.160   # Minimum radial radius (avoids base pillar self-collision)
+      r_max: 0.480   # Maximum radial radius (UR3 reach boundary)
+
+    # Pick and Place Defaults (base_link frame)
+    pick_and_place:
+      clearance_m: 0.10
+      pick_x: 0.350
+      pick_y: 0.000
+      pick_z: 0.005
+      place_x: 0.000
+      place_y: 0.350
+      place_z: 0.045
+      grasp_timeout_sec: 1.0
+      open_timeout_sec: 1.2
+      convergence_thresh_m: 0.0035
+
+    # Ready Pose TCP in base_link
+    ready_pose_tcp: [0.3439, 0.0625, 0.0444]

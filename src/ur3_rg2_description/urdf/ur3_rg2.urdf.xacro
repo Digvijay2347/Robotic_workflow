@@ -1,0 +1,163 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro"
+       name="ur3_rg2">
+
+  <!-- ===================================================== -->
+  <!-- External descriptions                                 -->
+  <!-- ===================================================== -->
+
+  <!-- Universal Robots description -->
+  <xacro:include
+      filename="$(find ur_description)/urdf/ur_macro.xacro"/>
+
+  <!-- OnRobot RG2 geometry only -->
+  <xacro:include
+      filename="$(find onrobot_description)/urdf/rg2_macro.xacro"/>
+
+
+  <!-- ===================================================== -->
+  <!-- Xacro arguments                                       -->
+  <!-- ===================================================== -->
+
+  <xacro:arg
+      name="name"
+      default="ur3"/>
+
+  <xacro:arg
+      name="tf_prefix"
+      default=""/>
+
+  <xacro:arg
+      name="robot_ip"
+      default="0.0.0.0"/>
+
+  <xacro:arg
+      name="kinematics_parameters_file"
+      default="$(find ur3_rg2_description)/config/my_ur3_calibration.yaml"/>
+
+  <xacro:arg
+      name="verify_robot_model"
+      default="false"/>
+
+  <xacro:arg
+      name="use_fake_hardware"
+      default="false"/>
+
+  <xacro:arg
+      name="fake_sensor_commands"
+      default="false"/>
+
+  <xacro:arg
+      name="headless_mode"
+      default="false"/>
+
+  <xacro:arg
+      name="initial_positions_file"
+      default="$(find ur_description)/config/initial_positions.yaml"/>
+
+
+  <!-- ===================================================== -->
+  <!-- UR3 configuration                                     -->
+  <!-- ===================================================== -->
+
+  <xacro:property
+      name="ur_type"
+      value="ur3"/>
+
+  <xacro:property
+      name="joint_limits_parameters_file"
+      value="$(find ur_description)/config/${ur_type}/joint_limits.yaml"/>
+
+  <xacro:property
+      name="physical_parameters_file"
+      value="$(find ur_description)/config/${ur_type}/physical_parameters.yaml"/>
+
+  <xacro:property
+      name="visual_parameters_file"
+      value="$(find ur_description)/config/${ur_type}/visual_parameters.yaml"/>
+
+
+  <!-- ===================================================== -->
+  <!-- UR driver resource files                              -->
+  <!-- ===================================================== -->
+
+  <xacro:property
+      name="script_filename"
+      value="$(find ur_client_library)/resources/external_control.urscript"/>
+
+  <xacro:property
+      name="input_recipe_filename"
+      value="$(find ur_robot_driver)/resources/rtde_input_recipe.txt"/>
+
+  <xacro:property
+      name="output_recipe_filename"
+      value="$(find ur_robot_driver)/resources/rtde_output_recipe.txt"/>
+
+
+  <!-- ===================================================== -->
+  <!-- World                                                 -->
+  <!-- ===================================================== -->
+
+  <link name="world"/>
+
+
+  <!-- ===================================================== -->
+  <!-- UR3 robot                                             -->
+  <!-- ===================================================== -->
+
+  <xacro:ur_robot
+      name="$(arg name)"
+      tf_prefix="$(arg tf_prefix)"
+      parent="world"
+
+      ur_type="${ur_type}"
+      robot_ip="$(arg robot_ip)"
+
+      joint_limits_parameters_file="${joint_limits_parameters_file}"
+      kinematics_parameters_file="$(arg kinematics_parameters_file)"
+      physical_parameters_file="${physical_parameters_file}"
+      visual_parameters_file="${visual_parameters_file}"
+
+      script_filename="${script_filename}"
+      input_recipe_filename="${input_recipe_filename}"
+      output_recipe_filename="${output_recipe_filename}"
+
+      verify_robot_model="$(arg verify_robot_model)"
+      use_fake_hardware="$(arg use_fake_hardware)"
+      fake_sensor_commands="$(arg fake_sensor_commands)"
+      headless_mode="$(arg headless_mode)"
+      initial_positions="${xacro.load_yaml('$(arg initial_positions_file)')}"
+      generate_ros2_control_tag="true">
+
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+
+  </xacro:ur_robot>
+
+
+  <!-- ===================================================== -->
+  <!-- OnRobot RG2 geometry (articulated joints so fingers move in RViz based on /joint_states) -->
+  <xacro:onrobot_rg2
+      prefix="rg2_"
+      fixed="false"/>
+
+
+  <!-- ===================================================== -->
+  <!-- RG2 mounting on UR3 tool0                             -->
+  <!-- ===================================================== -->
+
+  <joint
+      name="ur3_rg2_mount_joint"
+      type="fixed">
+
+    <parent link="tool0"/>
+
+    <child link="rg2_onrobot_base_link"/>
+
+    <origin
+        xyz="0 0 0"
+        rpy="0 0 0"/>
+
+  </joint>
+
+
+</robot>

@@ -1,0 +1,102 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- Aluminum Extrusion Silver -->
+  <material name="aluminum_silver">
+    <color rgba="0.80 0.82 0.84 1.0"/>
+  </material>
+
+  <!-- Dark Aluminum / Anodized Black -->
+  <material name="aluminum_dark">
+    <color rgba="0.22 0.22 0.25 1.0"/>
+  </material>
+
+  <!-- Tabletop Black ESD Rubber Mat -->
+  <material name="esd_mat_black">
+    <color rgba="0.12 0.13 0.15 1.0"/>
+  </material>
+
+  <!-- Machined Solid Aluminum Robot Base Plate -->
+  <material name="machined_plate_silver">
+    <color rgba="0.75 0.77 0.79 1.0"/>
+  </material>
+
+  <!-- Transparent Acrylic Enclosure Panels -->
+  <material name="acrylic_clear">
+    <color rgba="0.85 0.92 0.98 0.35"/>
+  </material>
+
+  <!-- Enclosure Door Handles & Hinges -->
+  <material name="hardware_black">
+    <color rgba="0.08 0.08 0.08 1.0"/>
+  </material>
+
+  <!-- UR Controller Box Metal Housing -->
+  <material name="ur_controller_grey">
+    <color rgba="0.45 0.48 0.50 1.0"/>
+  </material>
+
+  <!-- UR Controller Accents / Fan Grill -->
+  <material name="ur_controller_dark">
+    <color rgba="0.20 0.22 0.24 1.0"/>
+  </material>
+
+  <!-- Overhead LED Light Emissive Surface -->
+  <material name="led_white">
+    <color rgba="0.98 0.98 0.95 0.9"/>
+  </material>
+
+  <!-- UR Teach Pendant Bezel -->
+  <material name="teach_pendant_blue">
+    <color rgba="0.30 0.65 0.85 1.0"/>
+  </material>
+
+  <!-- UR Teach Pendant Screen Glass -->
+  <material name="teach_pendant_screen">
+    <color rgba="0.15 0.35 0.45 1.0"/>
+  </material>
+
+  <!-- Leveling Feet / Caster Wheel Rim -->
+  <material name="caster_white">
+    <color rgba="0.90 0.90 0.90 1.0"/>
+  </material>
+
+  <material name="caster_rubber">
+    <color rgba="0.15 0.15 0.15 1.0"/>
+  </material>
+
+  <!-- Emergency Stop Button Red -->
+  <material name="estop_red">
+    <color rgba="0.85 0.12 0.12 1.0"/>
+  </material>
+
+  <!-- Status Indicator Green -->
+  <material name="status_green">
+    <color rgba="0.15 0.85 0.25 1.0"/>
+  </material>
+
+  <!-- Lab Wall Panels (Cream / Off-white base) -->
+  <material name="wall_cream">
+    <color rgba="0.92 0.91 0.88 1.0"/>
+  </material>
+
+  <!-- Lab Wall Upper Accent (Blue partition panels) -->
+  <material name="wall_blue">
+    <color rgba="0.18 0.42 0.72 1.0"/>
+  </material>
+
+  <!-- Wood Wall Divider Trim (Dark brown mahogany) -->
+  <material name="wood_trim_brown">
+    <color rgba="0.40 0.22 0.14 1.0"/>
+  </material>
+
+  <!-- Wall Electrical Utility Boxes -->
+  <material name="electrical_grey">
+    <color rgba="0.75 0.75 0.77 1.0"/>
+  </material>
+
+  <material name="socket_red">
+    <color rgba="0.80 0.18 0.18 1.0"/>
+  </material>
+
+</robot>

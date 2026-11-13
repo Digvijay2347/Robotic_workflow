@@ -1,0 +1,44 @@
+# Joint limits used by MoveIt 2 for UR3 + OnRobot RG2 time-parameterization and planning.
+joint_limits:
+  shoulder_pan_joint:
+    has_velocity_limits: true
+    max_velocity: 3.141592653589793
+    has_acceleration_limits: true
+    max_acceleration: 5.0
+  shoulder_lift_joint:
+    has_velocity_limits: true
+    max_velocity: 3.141592653589793
+    has_acceleration_limits: true
+    max_acceleration: 5.0
+  elbow_joint:
+    has_velocity_limits: true
+    max_velocity: 3.141592653589793
+    has_acceleration_limits: true
+    max_acceleration: 5.0
+  wrist_1_joint:
+    has_velocity_limits: true
+    max_velocity: 6.283185307179586
+    has_acceleration_limits: true
+    max_acceleration: 5.0
+  wrist_2_joint:
+    has_velocity_limits: true
+    max_velocity: 6.283185307179586
+    has_acceleration_limits: true
+    max_acceleration: 5.0
+  wrist_3_joint:
+    has_velocity_limits: true
+    max_velocity: 6.283185307179586
+    has_acceleration_limits: true
+    max_acceleration: 5.0
+
+  # OnRobot RG2 Gripper limits
+  rg2_finger_joint:
+    has_velocity_limits: true
+    max_velocity: 1.57
+    has_acceleration_limits: true
+    max_acceleration: 5.0
+  rg2_finger_width:
+    has_velocity_limits: true
+    max_velocity: 0.127
+    has_acceleration_limits: true
+    max_acceleration: 1.0

@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="workstation_table">
+
+  <!-- =================================================================== -->
+  <!-- Include Table Macro Definition                                      -->
+  <!-- =================================================================== -->
+  <xacro:include filename="$(find environment)/urdf/table_macro.xacro"/>
+
+  <!-- =================================================================== -->
+  <!-- Configurable Arguments                                              -->
+  <!-- =================================================================== -->
+  <xacro:arg name="prefix" default=""/>
+  <xacro:arg name="table_length" default="1.17"/>
+  <xacro:arg name="table_width" default="0.72"/>
+  <xacro:arg name="table_height" default="0.78"/>
+  <xacro:arg name="plate_length" default="0.42"/>
+  <xacro:arg name="plate_width" default="0.30"/>
+  <xacro:arg name="plate_thickness" default="0.02"/>
+  <xacro:arg name="plate_x_from_left" default="0.39"/>
+  <xacro:arg name="gantry_height" default="1.17"/>
+  <xacro:arg name="gantry_overhang" default="0.54"/>
+  <xacro:arg name="include_ur_controller" default="true"/>
+  <xacro:arg name="include_teach_pendant" default="true"/>
+  <xacro:arg name="include_overhead_gantry" default="true"/>
+  <xacro:arg name="include_enclosure" default="true"/>
+  <xacro:arg name="include_wall" default="true"/>
+  <xacro:arg name="wall_gap" default="0.10"/>
+
+  <!-- World Link -->
+  <link name="world"/>
+
+  <!-- Instantiate Table Macro -->
+  <xacro:table
+    prefix="$(arg prefix)"
+    parent="world"
+    table_length="$(arg table_length)"
+    table_width="$(arg table_width)"
+    table_height="$(arg table_height)"
+    plate_length="$(arg plate_length)"
+    plate_width="$(arg plate_width)"
+    plate_thickness="$(arg plate_thickness)"
+    plate_x_from_left="$(arg plate_x_from_left)"
+    gantry_height="$(arg gantry_height)"
+    gantry_overhang="$(arg gantry_overhang)"
+    include_ur_controller="$(arg include_ur_controller)"
+    include_teach_pendant="$(arg include_teach_pendant)"
+    include_overhead_gantry="$(arg include_overhead_gantry)"
+    include_enclosure="$(arg include_enclosure)"
+    include_wall="$(arg include_wall)"
+    wall_gap="$(arg wall_gap)">
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </xacro:table>
+
+</robot>

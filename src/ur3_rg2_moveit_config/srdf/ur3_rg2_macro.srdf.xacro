@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot xmlns:xacro="http://wiki.ros.org/xacro">
+  <xacro:macro name="ur3_rg2_srdf" params="name:='' prefix:=''">
+
+    <!-- =================================================================== -->
+    <!-- PLANNING GROUPS                                                     -->
+    <!-- =================================================================== -->
+
+    <!-- Primary manipulator group (tip at gripper TCP so interactive marker & planning are at the grasp center) -->
+    <group name="${prefix}ur_manipulator">
+      <chain base_link="${prefix}base_link" tip_link="${prefix}rg2_gripper_tcp" />
+    </group>
+
+    <!-- Alternative manipulator group (tip at tool0 for raw wrist planning without gripper offset) -->
+    <group name="${prefix}ur_arm">
+      <chain base_link="${prefix}base_link" tip_link="${prefix}tool0" />
+    </group>
+
+    <!-- Backward-compatible alias -->
+    <group name="${prefix}ur_manipulator_tcp">
+      <chain base_link="${prefix}base_link" tip_link="${prefix}rg2_gripper_tcp" />
+    </group>
+
+    <!-- Gripper group representing the articulated OnRobot RG2 mechanism -->
+    <group name="${prefix}gripper">
+      <joint name="${prefix}rg2_finger_joint" />
+      <joint name="${prefix}rg2_finger_width" />
+      <link name="${prefix}rg2_onrobot_base_link" />
+      <link name="${prefix}rg2_left_outer_knuckle" />
+      <link name="${prefix}rg2_left_inner_knuckle" />
+      <link name="${prefix}rg2_left_inner_finger" />
+      <link name="${prefix}rg2_left_finger_tip" />
+      <link name="${prefix}rg2_right_outer_knuckle" />
+      <link name="${prefix}rg2_right_inner_knuckle" />
+      <link name="${prefix}rg2_right_inner_finger" />
+      <link name="${prefix}rg2_right_finger_tip" />
+      <link name="${prefix}rg2_gripper_tcp" />
+    </group>
+
+    <!-- Combined robot arm + gripper group -->
+    <group name="${prefix}ur3_rg2_arm_gripper">
+      <group name="${prefix}ur_manipulator" />
+      <group name="${prefix}gripper" />
+    </group>
+
+    <!-- =================================================================== -->
+    <!-- END EFFECTOR                                                        -->
+    <!-- =================================================================== -->
+    <end_effector
+      name="${prefix}rg2_gripper"
+      parent_link="${prefix}rg2_gripper_tcp"
+      group="${prefix}gripper"
+      parent_group="${prefix}ur_manipulator" />
+
+    <!-- =================================================================== -->
+    <!-- GROUP STATES (Named Poses)                                          -->
+    <!-- =================================================================== -->
+
+    <!-- Arm: Home poised state -->
+    <group_state name="${prefix}home" group="${prefix}ur_manipulator">
+      <joint name="${prefix}shoulder_pan_joint" value="0.0" />
+      <joint name="${prefix}shoulder_lift_joint" value="-1.5707" />
+      <joint name="${prefix}elbow_joint" value="0.0" />
+      <joint name="${prefix}wrist_1_joint" value="-1.5707" />
+      <joint name="${prefix}wrist_2_joint" value="0.0" />
+      <joint name="${prefix}wrist_3_joint" value="0.0" />
+    </group_state>
+
+    <!-- Arm: Upright vertical state -->
+    <group_state name="${prefix}up" group="${prefix}ur_manipulator">
+      <joint name="${prefix}shoulder_pan_joint" value="0.0" />
+      <joint name="${prefix}shoulder_lift_joint" value="-1.5707" />
+      <joint name="${prefix}elbow_joint" value="0.0" />
+      <joint name="${prefix}wrist_1_joint" value="0.0" />
+      <joint name="${prefix}wrist_2_joint" value="0.0" />
+      <joint name="${prefix}wrist_3_joint" value="0.0" />
+    </group_state>
+
+    <!-- Arm: Ready / Pre-Pick downwards poised hover pose -->
+    <group_state name="${prefix}ready" group="${prefix}ur_manipulator">
+      <joint name="${prefix}shoulder_pan_joint" value="-0.156" />
+      <joint name="${prefix}shoulder_lift_joint" value="-1.418" />
+      <joint name="${prefix}elbow_joint" value="1.647" />
+      <joint name="${prefix}wrist_1_joint" value="-1.800" />
+      <joint name="${prefix}wrist_2_joint" value="-1.5708" />
+      <joint name="${prefix}wrist_3_joint" value="0.0" />
+    </group_state>
+
+    <!-- Arm: Test configuration -->
+    <group_state name="${prefix}test_configuration" group="${prefix}ur_manipulator">
+      <joint name="${prefix}shoulder_pan_joint" value="1.54" />
+      <joint name="${prefix}shoulder_lift_joint" value="-1.62" />
+      <joint name="${prefix}elbow_joint" value="1.4" />
+      <joint name="${prefix}wrist_1_joint" value="-1.2" />
+      <joint name="${prefix}wrist_2_joint" value="-1.6" />
+      <joint name="${prefix}wrist_3_joint" value="-0.11" />
+    </group_state>
+
+    <!-- Gripper: Open position (110 mm stroke) -->
+    <group_state name="${prefix}open" group="${prefix}gripper">
+      <joint name="${prefix}rg2_finger_width" value="0.110" />
+      <joint name="${prefix}rg2_finger_joint" value="-0.5585" />
+    </group_state>
+
+    <!-- Gripper: Closed position (0 mm stroke) -->
+    <group_state name="${prefix}close" group="${prefix}gripper">
+      <joint name="${prefix}rg2_finger_width" value="0.000" />
+      <joint name="${prefix}rg2_finger_joint" value="0.7854" />
+    </group_state>
+
+    <!-- Gripper: Half open position (55 mm stroke) -->
+    <group_state name="${prefix}half_open" group="${prefix}gripper">
+      <joint name="${prefix}rg2_finger_width" value="0.055" />
+      <joint name="${prefix}rg2_finger_joint" value="0.1134" />
+    </group_state>
+
+    <!-- =================================================================== -->
+    <!-- DISABLE COLLISIONS MATRIX (ACM)                                     -->
+    <!-- All gripper-to-forearm, upper_arm, shoulder, base, and external     -->
+    <!-- environment collisions remain ENABLED for collision-free planning.  -->
+    <!-- =================================================================== -->
+
+    <!-- Arm internal collisions -->
+    <disable_collisions link1="${prefix}base_link" link2="${prefix}base_link_inertia" reason="Adjacent" />
+    <disable_collisions link1="${prefix}base_link_inertia" link2="${prefix}shoulder_link" reason="Adjacent" />
+    <disable_collisions link1="${prefix}shoulder_link" link2="${prefix}upper_arm_link" reason="Adjacent" />
+    <disable_collisions link1="${prefix}upper_arm_link" link2="${prefix}forearm_link" reason="Adjacent" />
+    <disable_collisions link1="${prefix}forearm_link" link2="${prefix}wrist_1_link" reason="Adjacent" />
+    <disable_collisions link1="${prefix}wrist_1_link" link2="${prefix}wrist_2_link" reason="Adjacent" />
+    <disable_collisions link1="${prefix}wrist_2_link" link2="${prefix}wrist_3_link" reason="Adjacent" />
+    <disable_collisions link1="${prefix}wrist_3_link" link2="${prefix}flange" reason="Adjacent" />
+    <disable_collisions link1="${prefix}wrist_3_link" link2="${prefix}tool0" reason="Adjacent" />
+    <disable_collisions link1="${prefix}flange" link2="${prefix}tool0" reason="Adjacent" />
+    <disable_collisions link1="${prefix}wrist_3_link" link2="${prefix}ft_frame" reason="Adjacent" />
+    <disable_collisions link1="${prefix}tool0" link2="${prefix}ft_frame" reason="Never" />
+    <disable_collisions link1="${prefix}flange" link2="${prefix}ft_frame" reason="Never" />
+    <disable_collisions link1="${prefix}tool0" link2="${prefix}wrist_1_link" reason="Never" />
+    <disable_collisions link1="${prefix}tool0" link2="${prefix}wrist_2_link" reason="Never" />
+    <disable_collisions link1="${prefix}flange" link2="${prefix}wrist_1_link" reason="Never" />
+    <disable_collisions link1="${prefix}flange" link2="${prefix}wrist_2_link" reason="Never" />
+    <disable_collisions link1="${prefix}wrist_1_link" link2="${prefix}wrist_3_link" reason="Never" />
+    <disable_collisions link1="${prefix}base_link" link2="${prefix}shoulder_link" reason="Never" />
+    <disable_collisions link1="${prefix}base_link" link2="${prefix}upper_arm_link" reason="Never" />
+    <disable_collisions link1="${prefix}base" link2="${prefix}base_link" reason="Adjacent" />
+    <disable_collisions link1="${prefix}base" link2="${prefix}base_link_inertia" reason="Adjacent" />
+    <disable_collisions link1="${prefix}base" link2="${prefix}shoulder_link" reason="Never" />
+
+    <!-- UR3 wrist to OnRobot RG2 gripper mount -->
+    <disable_collisions link1="${prefix}tool0" link2="${prefix}rg2_onrobot_base_link" reason="Adjacent" />
+    <disable_collisions link1="${prefix}wrist_3_link" link2="${prefix}rg2_onrobot_base_link" reason="Adjacent" />
+    <disable_collisions link1="${prefix}flange" link2="${prefix}rg2_onrobot_base_link" reason="Adjacent" />
+    <disable_collisions link1="${prefix}ft_frame" link2="${prefix}rg2_onrobot_base_link" reason="Never" />
+    <disable_collisions link1="${prefix}wrist_2_link" link2="${prefix}rg2_onrobot_base_link" reason="Never" />
+    <disable_collisions link1="${prefix}wrist_1_link" link2="${prefix}rg2_onrobot_base_link" reason="Never" />
+
+    <!-- UR3 wrist to OnRobot RG2 proximal knuckles (clearance distance) -->
+    <disable_collisions link1="${prefix}tool0" link2="${prefix}rg2_left_outer_knuckle" reason="Never" />
+    <disable_collisions link1="${prefix}tool0" link2="${prefix}rg2_right_outer_knuckle" reason="Never" />
+    <disable_collisions link1="${prefix}tool0" link2="${prefix}rg2_left_inner_knuckle" reason="Never" />
+    <disable_collisions link1="${prefix}tool0" link2="${prefix}rg2_right_inner_knuckle" reason="Never" />
+    <disable_collisions link1="${prefix}wrist_3_link" link2="${prefix}rg2_left_outer_knuckle" reason="Never" />
+    <disable_collisions link1="${prefix}wrist_3_link" link2="${prefix}rg2_right_outer_knuckle" reason="Never" />
+    <disable_collisions link1="${prefix}wrist_3_link" link2="${prefix}rg2_left_inner_knuckle" reason="Never" />
+    <disable_collisions link1="${prefix}wrist_3_link" link2="${prefix}rg2_right_inner_knuckle" reason="Never" />
+    <disable_collisions link1="${prefix}flange" link2="${prefix}rg2_left_outer_knuckle" reason="Never" />
+    <disable_collisions link1="${prefix}flange" link2="${prefix}rg2_right_outer_knuckle" reason="Never" />
+    <disable_collisions link1="${prefix}flange" link2="${prefix}rg2_left_inner_knuckle" reason="Never" />
+    <disable_collisions link1="${prefix}flange" link2="${prefix}rg2_right_inner_knuckle" reason="Never" />
+
+    <!-- OnRobot RG2 gripper internal mechanism -->
+    <disable_collisions link1="${prefix}rg2_onrobot_base_link" link2="${prefix}rg2_left_outer_knuckle" reason="Adjacent" />
+    <disable_collisions link1="${prefix}rg2_onrobot_base_link" link2="${prefix}rg2_right_outer_knuckle" reason="Adjacent" />
+    <disable_collisions link1="${prefix}rg2_onrobot_base_link" link2="${prefix}rg2_left_inner_knuckle" reason="Adjacent" />
+    <disable_collisions link1="${prefix}rg2_onrobot_base_link" link2="${prefix}rg2_right_inner_knuckle" reason="Adjacent" />
+
+    <disable_collisions link1="${prefix}rg2_left_outer_knuckle" link2="${prefix}rg2_left_inner_finger" reason="Adjacent" />
+    <disable_collisions link1="${prefix}rg2_right_outer_knuckle" link2="${prefix}rg2_right_inner_finger" reason="Adjacent" />
+    <disable_collisions link1="${prefix}rg2_left_inner_knuckle" link2="${prefix}rg2_left_inner_finger" reason="Default" />
+    <disable_collisions link1="${prefix}rg2_right_inner_knuckle" link2="${prefix}rg2_right_inner_finger" reason="Default" />
+
+    <disable_collisions link1="${prefix}rg2_left_inner_finger" link2="${prefix}rg2_left_finger_tip" reason="Adjacent" />
+    <disable_collisions link1="${prefix}rg2_right_inner_finger" link2="${prefix}rg2_right_finger_tip" reason="Adjacent" />
+
+    <disable_collisions link1="${prefix}rg2_left_outer_knuckle" link2="${prefix}rg2_left_inner_knuckle" reason="Never" />
+    <disable_collisions link1="${prefix}rg2_right_outer_knuckle" link2="${prefix}rg2_right_inner_knuckle" reason="Never" />
+    <disable_collisions link1="${prefix}rg2_left_outer_knuckle" link2="${prefix}rg2_right_outer_knuckle" reason="Never" />
+    <disable_collisions link1="${prefix}rg2_left_inner_knuckle" link2="${prefix}rg2_right_inner_knuckle" reason="Never" />
+    <disable_collisions link1="${prefix}rg2_left_outer_knuckle" link2="${prefix}rg2_right_inner_knuckle" reason="Never" />
+    <disable_collisions link1="${prefix}rg2_right_outer_knuckle" link2="${prefix}rg2_left_inner_knuckle" reason="Never" />
+
+    <disable_collisions link1="${prefix}rg2_left_outer_knuckle" link2="${prefix}rg2_right_inner_finger" reason="Never" />
+    <disable_collisions link1="${prefix}rg2_right_outer_knuckle" link2="${prefix}rg2_left_inner_finger" reason="Never" />
+    <disable_collisions link1="${prefix}rg2_left_inner_knuckle" link2="${prefix}rg2_right_inner_finger" reason="Never" />
+    <disable_collisions link1="${prefix}rg2_right_inner_knuckle" link2="${prefix}rg2_left_inner_finger" reason="Never" />
+    <disable_collisions link1="${prefix}rg2_left_inner_finger" link2="${prefix}rg2_right_inner_finger" reason="Never" />
+
+    <!-- Virtual and non-collision mock links -->
+    <disable_collisions link1="${prefix}rg2_finger_width_mock_link" link2="${prefix}rg2_onrobot_base_link" reason="Adjacent" />
+    <disable_collisions link1="${prefix}rg2_finger_width_mock_link" link2="${prefix}tool0" reason="Default" />
+    <disable_collisions link1="${prefix}rg2_finger_width_mock_link" link2="${prefix}wrist_3_link" reason="Default" />
+    <disable_collisions link1="${prefix}rg2_gripper_tcp" link2="${prefix}rg2_onrobot_base_link" reason="Adjacent" />
+    <disable_collisions link1="${prefix}rg2_gripper_tcp" link2="${prefix}tool0" reason="Default" />
+    <disable_collisions link1="${prefix}rg2_gripper_tcp" link2="${prefix}wrist_3_link" reason="Default" />
+    <disable_collisions link1="${prefix}rg2_left_finger_tip" link2="${prefix}rg2_onrobot_base_link" reason="Default" />
+    <disable_collisions link1="${prefix}rg2_right_finger_tip" link2="${prefix}rg2_onrobot_base_link" reason="Default" />
+
+  </xacro:macro>
+</robot>
